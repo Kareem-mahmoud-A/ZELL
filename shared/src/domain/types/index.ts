@@ -7,6 +7,8 @@ import {
   PromotionType,
   DiscountScope,
   NotificationType,
+  InventoryStatus,
+  StockMovementType,
 } from "../enums";
 
 export interface User {
@@ -38,6 +40,7 @@ export interface ProductVariant {
   attributes: Record<string, string>; // e.g., { "size": "M", "color": "Blue" }
   stockQuantity: number;
   imageGallery: string[];
+  isAvailable: boolean;
 }
 
 export interface Product {
@@ -45,13 +48,26 @@ export interface Product {
   title: string;
   slug: string;
   description: string;
+  shortDescription: string;
   basePrice: number; // in cents
+  compareAtPrice?: number;
+  discountPrice?: number;
+  currency: string;
   mainImage: string;
   variants: ProductVariant[];
   categories: string[]; // Category IDs
+  tags: string[];
+  collections: string[];
+  visibility: "HIDDEN" | "VISIBLE" | "SEARCH_ONLY";
+  isFeatured: boolean;
+  brandId?: string;
+  publishedAt?: Date;
   rating?: number;
   reviewCount: number;
   isActive: boolean;
+  status: "DRAFT" | "ACTIVE" | "ARCHIVED";
+  seoTitle?: string;
+  seoDescription?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,8 +79,33 @@ export interface Category {
   description?: string;
   parentId?: string; // Self-reference for category nesting
   image?: string;
+  isActive: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logo?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StockMovement {
+  id: string;
+  sku: string;
+  type: StockMovementType;
+  quantity: number;
+  reason?: string;
+  createdBy: string;
+  timestamp: Date;
 }
 
 export interface CartItem {
@@ -177,6 +218,9 @@ export interface Inventory {
   quantity: number;
   reservedQuantity: number;
   reorderPoint: number;
+  lowStockThreshold: number;
+  status: InventoryStatus;
+  movements: StockMovement[];
   lastUpdated: Date;
 }
 

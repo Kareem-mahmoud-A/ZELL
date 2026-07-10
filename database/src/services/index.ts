@@ -55,3 +55,6 @@ export class OrderService {
     });
   }
 }
+
+export * from "./catalog.service";
+export * from "./inventory.service";

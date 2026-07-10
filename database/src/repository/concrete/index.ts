@@ -9,8 +9,17 @@ import {
   Review,
   Promotion,
   Notification,
+  Brand,
+  Inventory,
 } from "@zell/shared";
-import { UserMapper, ProductMapper, OrderMapper } from "@zell/shared";
+import {
+  UserMapper,
+  ProductMapper,
+  OrderMapper,
+  BrandMapper,
+  CategoryMapper,
+  InventoryMapper,
+} from "@zell/shared";
 
 export class UserRepository extends FirestoreRepository<User> {
   constructor() {
@@ -32,7 +41,19 @@ export class OrderRepository extends FirestoreRepository<Order> {
 
 export class CategoryRepository extends FirestoreRepository<Category> {
   constructor() {
-    super("categories");
+    super("categories", CategoryMapper);
+  }
+}
+
+export class BrandRepository extends FirestoreRepository<Brand> {
+  constructor() {
+    super("brands", BrandMapper);
+  }
+}
+
+export class InventoryRepository extends FirestoreRepository<Inventory> {
+  constructor() {
+    super("inventory", InventoryMapper);
   }
 }
 

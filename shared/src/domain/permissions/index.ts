@@ -17,8 +17,15 @@ const rolePermissions: Record<Role, Permission[]> = {
     Permission.MANAGE_ORDERS,
     Permission.VIEW_REPORTS,
   ],
+  [Role.MANAGER]: [
+    Permission.VIEW_CATALOG,
+    Permission.MANAGE_PRODUCTS,
+    Permission.MANAGE_ORDERS,
+    Permission.VIEW_REPORTS,
+  ],
   [Role.CUSTOMER]: [Permission.VIEW_CATALOG, Permission.CHECKOUT],
   [Role.GUEST]: [Permission.VIEW_CATALOG],
+  [Role.SUPPORT]: [Permission.VIEW_CATALOG, Permission.MANAGE_ORDERS],
 };
 
 export class SecurityPolicy {

@@ -1,8 +1,10 @@
 export enum Role {
   ADMIN = "ADMIN",
   MERCHANT = "MERCHANT",
+  MANAGER = "MANAGER",
   CUSTOMER = "CUSTOMER",
   GUEST = "GUEST",
+  SUPPORT = "SUPPORT",
 }
 
 export enum OrderStatus {
@@ -53,4 +55,16 @@ export enum NotificationType {
   PROMOTION = "PROMOTION",
   INVENTORY_ALERT = "INVENTORY_ALERT",
   SECURITY = "SECURITY",
+}
+
+export enum InventoryStatus {
+  IN_STOCK = "IN_STOCK",
+  LOW_STOCK = "LOW_STOCK",
+  OUT_OF_STOCK = "OUT_OF_STOCK",
+}
+
+export enum StockMovementType {
+  IN = "IN",
+  OUT = "OUT",
+  ADJUSTMENT = "ADJUSTMENT",
 }

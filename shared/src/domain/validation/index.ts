@@ -8,6 +8,8 @@ import {
   PromotionType,
   DiscountScope,
   NotificationType,
+  InventoryStatus,
+  StockMovementType,
 } from "../enums";
 
 // User Schemas
@@ -57,6 +59,7 @@ export const ProductVariantSchema = z.object({
   attributes: z.record(z.string(), z.string()),
   stockQuantity: z.number().int().nonnegative(),
   imageGallery: z.array(z.string()),
+  isAvailable: z.boolean(),
 });
 
 // Product Schema
@@ -65,13 +68,26 @@ export const ProductSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1),
   description: z.string().min(1),
+  shortDescription: z.string().min(1),
   basePrice: z.number().int().nonnegative(),
+  compareAtPrice: z.number().int().nonnegative().optional(),
+  discountPrice: z.number().int().nonnegative().optional(),
+  currency: z.string().min(3).max(3),
   mainImage: z.string(),
   variants: z.array(ProductVariantSchema).min(1),
   categories: z.array(z.string().min(1)),
+  tags: z.array(z.string()),
+  collections: z.array(z.string()),
+  visibility: z.enum(["HIDDEN", "VISIBLE", "SEARCH_ONLY"]),
+  isFeatured: z.boolean(),
+  brandId: z.string().min(1).optional(),
+  publishedAt: z.date().optional(),
   rating: z.number().min(1).max(5).optional(),
   reviewCount: z.number().int().nonnegative(),
   isActive: z.boolean(),
+  status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -92,8 +108,33 @@ export const CategorySchema = z.object({
   description: z.string().optional(),
   parentId: z.string().optional(),
   image: z.string().optional(),
+  isActive: z.boolean(),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+export const BrandSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().optional(),
+  logo: z.string().optional(),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const StockMovementSchema = z.object({
+  id: z.string().min(1),
+  sku: z.string().min(1),
+  type: z.nativeEnum(StockMovementType),
+  quantity: z.number().int().nonnegative(),
+  reason: z.string().optional(),
+  createdBy: z.string().min(1),
+  timestamp: z.date(),
 });
 
 // Cart Schemas
@@ -199,6 +240,9 @@ export const InventorySchema = z.object({
   quantity: z.number().int().nonnegative(),
   reservedQuantity: z.number().int().nonnegative(),
   reorderPoint: z.number().int().nonnegative(),
+  lowStockThreshold: z.number().int().nonnegative(),
+  status: z.nativeEnum(InventoryStatus),
+  movements: z.array(StockMovementSchema),
   lastUpdated: z.date(),
 });
 
