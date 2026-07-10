@@ -8,7 +8,6 @@ export const releaseExpiredReservationsCron = onSchedule(
     memory: "256MiB",
   },
   async () => {
-
     try {
       const releasedCount = await InventoryService.releaseExpiredReservations();
       console.log(

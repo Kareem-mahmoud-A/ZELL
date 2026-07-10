@@ -137,10 +137,17 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isAuthenticated()
         && (resource.data.userId == request.auth.uid || canManageOrders());
-      // Orders are created exclusively via the server-side checkout Cloud Function
-      allow create: if false;
-      allow update, delete: if canManageOrders();
+      // Orders are created exclusively via server-side checkout Server Actions / Admin SDK
+      allow write: if false;
     }
+
+    // ─── Idempotency ──────────────────────────────────────────────────────────
+
+    match /idempotency/{key} {
+      // Strictly backend-controlled protection logs
+      allow read, write: if false;
+    }
+
 
     // ─── Reviews ─────────────────────────────────────────────────────────────
 

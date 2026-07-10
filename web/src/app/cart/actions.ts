@@ -5,7 +5,6 @@ import * as crypto from "crypto";
 import { Role, Cart, CartItem, NotFoundError } from "@zell/shared";
 import { CartService, CatalogService } from "@zell/database";
 
-
 interface UserSessionPayload {
   uid: string;
   role: Role;

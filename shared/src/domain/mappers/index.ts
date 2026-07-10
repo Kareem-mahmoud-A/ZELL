@@ -6,6 +6,8 @@ import {
   Coupon,
   Promotion,
   InventoryReservation,
+  Order,
+  IdempotencyRecord,
 } from "../types";
 import { InventoryStatus } from "../enums";
 
@@ -252,57 +254,119 @@ export class InventoryMapper {
 }
 
 export class OrderMapper {
-  public static toDomain(raw: any): any {
+  public static toDomain(raw: any): Order {
     return {
       id: raw.id,
       userId: raw.userId,
       items: (raw.items || []).map((i: any) => ({
         productId: i.productId,
         sku: i.sku,
+        productSlug: i.productSlug,
+        productName: i.productName,
+        brandName: i.brandName,
+        selectedVariantAttributes: i.selectedVariantAttributes || {},
+        unitPrice: i.unitPrice,
+        appliedDiscounts: i.appliedDiscounts || 0,
+        currency: i.currency,
+        productImage: i.productImage,
         quantity: i.quantity,
-        price: i.price,
-        title: i.title,
-        attributes: i.attributes || {},
       })),
       status: raw.status,
+      statusHistory: (raw.statusHistory || []).map((h: any) => ({
+        status: h.status,
+        action: h.action,
+        updatedAt: DateMapper.toDate(h.updatedAt),
+        updatedBy: h.updatedBy,
+        reason: h.reason,
+      })),
       subtotal: raw.subtotal,
       tax: raw.tax,
       shipping: raw.shipping,
       total: raw.total,
-      promoCodeApplied: raw.promoCodeApplied,
+      promoCodeApplied: raw.promoCodeApplied || undefined,
       billingAddress: raw.billingAddress,
       shippingAddress: raw.shippingAddress,
       paymentStatus: raw.paymentStatus,
       shipmentStatus: raw.shipmentStatus,
+      shippingMethod: raw.shippingMethod
+        ? {
+            id: raw.shippingMethod.id,
+            name: raw.shippingMethod.name,
+            price: raw.shippingMethod.price,
+            estimatedDays: raw.shippingMethod.estimatedDays,
+          }
+        : undefined,
       createdAt: DateMapper.toDate(raw.createdAt),
       updatedAt: DateMapper.toDate(raw.updatedAt),
     };
   }
 
-  public static toPersistence(domain: any): any {
+  public static toPersistence(domain: Order): any {
     return {
       id: domain.id,
       userId: domain.userId,
-      items: domain.items.map((i: any) => ({
+      items: domain.items.map((i) => ({
         productId: i.productId,
         sku: i.sku,
+        productSlug: i.productSlug,
+        productName: i.productName,
+        brandName: i.brandName || null,
+        selectedVariantAttributes: i.selectedVariantAttributes,
+        unitPrice: i.unitPrice,
+        appliedDiscounts: i.appliedDiscounts,
+        currency: i.currency,
+        productImage: i.productImage,
         quantity: i.quantity,
-        price: i.price,
-        title: i.title,
-        attributes: i.attributes,
       })),
       status: domain.status,
+      statusHistory: domain.statusHistory.map((h) => ({
+        status: h.status,
+        action: h.action,
+        updatedAt: h.updatedAt,
+        updatedBy: h.updatedBy,
+        reason: h.reason || null,
+      })),
       subtotal: domain.subtotal,
       tax: domain.tax,
       shipping: domain.shipping,
       total: domain.total,
-      promoCodeApplied: domain.promoCodeApplied,
+      promoCodeApplied: domain.promoCodeApplied || null,
       billingAddress: domain.billingAddress,
       shippingAddress: domain.shippingAddress,
       paymentStatus: domain.paymentStatus,
       shipmentStatus: domain.shipmentStatus,
+      shippingMethod: domain.shippingMethod
+        ? {
+            id: domain.shippingMethod.id,
+            name: domain.shippingMethod.name,
+            price: domain.shippingMethod.price,
+            estimatedDays: domain.shippingMethod.estimatedDays,
+          }
+        : null,
       createdAt: domain.createdAt,
       updatedAt: domain.updatedAt,
+    };
+  }
+}
+
+export class IdempotencyRecordMapper {
+  public static toDomain(raw: any): IdempotencyRecord {
+    return {
+      key: raw.key,
+      userId: raw.userId,
+      orderId: raw.orderId || undefined,
+      status: raw.status,
+      expiresAt: DateMapper.toDate(raw.expiresAt),
+    };
+  }
+
+  public static toPersistence(domain: IdempotencyRecord): any {
+    return {
+      key: domain.key,
+      userId: domain.userId,
+      orderId: domain.orderId || null,
+      status: domain.status,
+      expiresAt: domain.expiresAt,
     };
   }
 }

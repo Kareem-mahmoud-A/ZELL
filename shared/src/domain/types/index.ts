@@ -163,13 +163,47 @@ export interface InventoryReservation {
   createdAt: Date;
 }
 
+export interface OrderStatusHistory {
+  status: OrderStatus;
+  action: "STATUS_CHANGED" | "PAYMENT_CONFIRMED" | "AUTO_CANCELLED" | "REFUND_CREATED";
+  updatedAt: Date;
+  updatedBy: string;
+  reason?: string;
+}
+
 export interface OrderItem {
   productId: string;
   sku: string;
+  productSlug: string;
+  productName: string;
+  brandName?: string;
+  selectedVariantAttributes: Record<string, string>;
+  unitPrice: number; // in cents
+  appliedDiscounts: number; // in cents
+  currency: string;
+  productImage: string;
   quantity: number;
+}
+
+export interface ShippingMethod {
+  id: string;
+  name: string;
   price: number; // in cents
-  title: string;
-  attributes: Record<string, string>;
+  estimatedDays: string;
+}
+
+export interface TaxSummary {
+  rate: number;
+  amount: number; // in cents
+  region: string;
+}
+
+export interface IdempotencyRecord {
+  key: string;
+  userId: string;
+  orderId?: string;
+  status: "PENDING" | "COMPLETED" | "FAILED";
+  expiresAt: Date;
 }
 
 export interface Order {
@@ -177,6 +211,7 @@ export interface Order {
   userId: string;
   items: OrderItem[];
   status: OrderStatus;
+  statusHistory: OrderStatusHistory[];
   subtotal: number; // in cents
   tax: number; // in cents
   shipping: number; // in cents
@@ -186,6 +221,7 @@ export interface Order {
   shippingAddress: Address;
   paymentStatus: PaymentStatus;
   shipmentStatus: ShipmentStatus;
+  shippingMethod?: ShippingMethod;
   createdAt: Date;
   updatedAt: Date;
 }

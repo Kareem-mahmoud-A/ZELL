@@ -44,7 +44,6 @@ export default function RootLayout({
               <CartProvider>{children}</CartProvider>
             </ToastProvider>
           </AuthProvider>
-
         </ThemeProvider>
       </body>
     </html>

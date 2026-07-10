@@ -196,13 +196,33 @@ export const InventoryReservationSchema = z.object({
 });
 
 // Order Schemas
+export const OrderStatusHistorySchema = z.object({
+  status: z.nativeEnum(OrderStatus),
+  action: z.enum(["STATUS_CHANGED", "PAYMENT_CONFIRMED", "AUTO_CANCELLED", "REFUND_CREATED"]),
+  updatedAt: z.date(),
+  updatedBy: z.string().min(1),
+  reason: z.string().optional(),
+});
+
 export const OrderItemSchema = z.object({
   productId: z.string().min(1),
   sku: z.string().min(1),
+  productSlug: z.string().min(1),
+  productName: z.string().min(1),
+  brandName: z.string().optional(),
+  selectedVariantAttributes: z.record(z.string(), z.string()),
+  unitPrice: z.number().int().nonnegative(),
+  appliedDiscounts: z.number().int().nonnegative(),
+  currency: z.string().min(1),
+  productImage: z.string(),
   quantity: z.number().int().positive(),
+});
+
+export const ShippingMethodSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
   price: z.number().int().nonnegative(),
-  title: z.string().min(1),
-  attributes: z.record(z.string(), z.string()),
+  estimatedDays: z.string().min(1),
 });
 
 export const OrderSchema = z.object({
@@ -210,6 +230,7 @@ export const OrderSchema = z.object({
   userId: z.string().min(1),
   items: z.array(OrderItemSchema).min(1),
   status: z.nativeEnum(OrderStatus),
+  statusHistory: z.array(OrderStatusHistorySchema),
   subtotal: z.number().int().nonnegative(),
   tax: z.number().int().nonnegative(),
   shipping: z.number().int().nonnegative(),
@@ -219,6 +240,7 @@ export const OrderSchema = z.object({
   shippingAddress: AddressSchema,
   paymentStatus: z.nativeEnum(PaymentStatus),
   shipmentStatus: z.nativeEnum(ShipmentStatus),
+  shippingMethod: ShippingMethodSchema.optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

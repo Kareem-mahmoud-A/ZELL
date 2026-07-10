@@ -11,7 +11,6 @@ import {
   CartMergeService,
 } from "@zell/shared";
 
-
 // Setup mock products
 const mockProducts: Product[] = [
   {
