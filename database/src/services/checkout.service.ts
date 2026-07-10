@@ -55,41 +55,87 @@ export class CheckoutService {
     const orderRef = db.collection("orders").doc();
 
     const orderResult = await db.runTransaction(async (transaction) => {
-      // 1. Idempotency Check
+      // ─── READ PHASE ──────────────────────────────────────────────────────────
+
+      // 1. Read Idempotency Record
       const idempotencySnap = await transaction.get(idempotencyRef);
+      let existingRecord: IdempotencyRecord | null = null;
+      let existingOrderDoc: admin.firestore.DocumentSnapshot<admin.firestore.DocumentData> | null =
+        null;
+
       if (idempotencySnap.exists) {
-        const record = IdempotencyRecordMapper.toDomain({
+        existingRecord = IdempotencyRecordMapper.toDomain({
           key: idempotencySnap.id,
           ...idempotencySnap.data(),
         });
 
-        if (record.status === "COMPLETED" && record.orderId) {
-          // Retrieve and return the existing order
-          const existingOrderDoc = await transaction.get(
-            db.collection("orders").doc(record.orderId)
+        if (existingRecord.status === "COMPLETED" && existingRecord.orderId) {
+          existingOrderDoc = await transaction.get(
+            db.collection("orders").doc(existingRecord.orderId)
           );
-          if (existingOrderDoc.exists) {
+        }
+      }
+
+      // 2. Read Cart
+      const cartSnap = await transaction.get(cartRef);
+
+      // 3. Read Coupon and Promotion (if coupon is applied)
+      let couponSnap: admin.firestore.QuerySnapshot<admin.firestore.DocumentData> | null = null;
+      let promoDoc: admin.firestore.DocumentSnapshot<admin.firestore.DocumentData> | null = null;
+
+      if (cartSnap.exists) {
+        const cartData = cartSnap.data() as Cart;
+        if (cartData.promoCodesApplied && cartData.promoCodesApplied.length > 0) {
+          const couponCode = cartData.promoCodesApplied[0];
+          const couponQuery = db.collection("coupons").where("code", "==", couponCode).limit(1);
+          couponSnap = await transaction.get(couponQuery);
+          if (couponSnap && !couponSnap.empty) {
+            const couponData = couponSnap.docs[0].data();
+            const promoRef = db.collection("promotions").doc(couponData.promoId as string);
+            promoDoc = await transaction.get(promoRef);
+          }
+        }
+      }
+
+      // 4. Read Product Documents
+      const productDocs: admin.firestore.DocumentSnapshot[] = [];
+      if (cartSnap.exists) {
+        const cartData = cartSnap.data() as Cart;
+        const productIds = Array.from(new Set((cartData.items || []).map((i) => i.productId)));
+        for (const pId of productIds) {
+          const pDoc = await transaction.get(db.collection("products").doc(pId));
+          productDocs.push(pDoc);
+        }
+      }
+
+      // 5. Read Inventory Documents
+      const inventorySnaps: admin.firestore.DocumentSnapshot[] = [];
+      if (cartSnap.exists) {
+        const cartData = cartSnap.data() as Cart;
+        for (const item of cartData.items || []) {
+          const inventoryRef = db.collection("inventory").doc(item.sku);
+          const inventorySnap = await transaction.get(inventoryRef);
+          inventorySnaps.push(inventorySnap);
+        }
+      }
+
+      // ─── VALIDATION & WRITE PHASE ──────────────────────────────────────────
+
+      // 1. Validate Idempotency
+      if (existingRecord) {
+        if (existingRecord.status === "COMPLETED" && existingRecord.orderId) {
+          if (existingOrderDoc && existingOrderDoc.exists) {
             return OrderMapper.toDomain({
               id: existingOrderDoc.id,
               ...existingOrderDoc.data(),
             });
           }
-        } else if (record.status === "PENDING") {
+        } else if (existingRecord.status === "PENDING") {
           throw new ValidationError("An order is currently being processed for this request.");
         }
       }
 
-      // Write idempotency pending record
-      const pendingRecord: IdempotencyRecord = {
-        key: idempotencyKey,
-        userId,
-        status: "PENDING",
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
-      };
-      transaction.set(idempotencyRef, IdempotencyRecordMapper.toPersistence(pendingRecord));
-
-      // 2. Load Cart
-      const cartSnap = await transaction.get(cartRef);
+      // 2. Validate Cart
       if (!cartSnap.exists) {
         throw new NotFoundError("Cart not found.");
       }
@@ -98,39 +144,30 @@ export class CheckoutService {
         throw new ValidationError("Cannot checkout with an empty cart.");
       }
 
-      // 3. Load Products & Revalidate pricing/stock
-      const productIds = Array.from(new Set(cart.items.map((i) => i.productId)));
+      // Parse resolved products
       const products: Product[] = [];
-      for (const pId of productIds) {
-        const pDoc = await transaction.get(db.collection("products").doc(pId));
-        if (pDoc.exists) {
-          products.push({ id: pDoc.id, ...pDoc.data() } as Product);
+      for (const doc of productDocs) {
+        if (doc.exists) {
+          products.push({ id: doc.id, ...doc.data() } as Product);
         }
       }
 
       // Revalidate Pricing
       const calculation = CartCalculator.calculate(cart.items, products);
 
-      // Verify Coupon validity if applied
+      // Validate Coupon and Promotion
       if (cart.promoCodesApplied.length > 0) {
-        const couponCode = cart.promoCodesApplied[0];
-        const couponQuery = db.collection("coupons").where("code", "==", couponCode).limit(1);
-        const couponSnap = await transaction.get(couponQuery);
-
-        if (couponSnap.empty) {
-          throw new ValidationError(`Coupon ${couponCode} is invalid.`);
+        if (!couponSnap || couponSnap.empty) {
+          throw new ValidationError(`Coupon ${cart.promoCodesApplied[0]} is invalid.`);
         }
         const couponDoc = couponSnap.docs[0];
-        const couponData = couponDoc.data() as Record<string, unknown>;
-        const promoDoc = await transaction.get(
-          db.collection("promotions").doc(couponData.promoId as string)
-        );
-
-        if (!promoDoc.exists) {
-          throw new ValidationError(`Promotion details for coupon ${couponCode} not found.`);
+        if (!promoDoc || !promoDoc.exists) {
+          throw new ValidationError(
+            `Promotion details for coupon ${cart.promoCodesApplied[0]} not found.`
+          );
         }
 
-        const coupon = CouponMapper.toDomain({ id: couponDoc.id, ...couponData });
+        const coupon = CouponMapper.toDomain({ id: couponDoc.id, ...couponDoc.data() });
         const promotion = PromotionMapper.toDomain({
           id: promoDoc.id,
           ...(promoDoc.data() as Record<string, unknown>),
@@ -142,11 +179,21 @@ export class CheckoutService {
         }
       }
 
-      // 4. Verify & Deduct Inventory Stock Level
+      // Write pending idempotency record
+      const pendingRecord: IdempotencyRecord = {
+        key: idempotencyKey,
+        userId,
+        status: "PENDING",
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+      };
+      transaction.set(idempotencyRef, IdempotencyRecordMapper.toPersistence(pendingRecord));
+
+      // Process items and verify stock
       const orderItems: OrderItem[] = [];
-      for (const item of cart.items) {
+      for (let i = 0; i < cart.items.length; i++) {
+        const item = cart.items[i];
+        const inventorySnap = inventorySnaps[i];
         const inventoryRef = db.collection("inventory").doc(item.sku);
-        const inventorySnap = await transaction.get(inventoryRef);
 
         if (!inventorySnap.exists) {
           throw new NotFoundError(`Inventory record not found for SKU: ${item.sku}`);
@@ -222,7 +269,7 @@ export class CheckoutService {
         });
       }
 
-      // 5. Calculate Taxes & Final Totals
+      // Calculate Taxes & Final Totals
       const subtotalMoney = new Money(calculation.subtotal);
       const shippingMoney = new Money(shippingMethod.price);
       const taxMoney = taxStrategy.calculateTax(
@@ -232,7 +279,7 @@ export class CheckoutService {
       );
       const totalMoney = subtotalMoney.add(shippingMoney).add(taxMoney);
 
-      // 6. Create Order Document
+      // Create Order Document
       const now = new Date();
       const order: Order = {
         id: orderRef.id,
@@ -264,7 +311,7 @@ export class CheckoutService {
 
       transaction.set(orderRef, OrderMapper.toPersistence(order));
 
-      // 7. Complete Idempotency record
+      // Complete Idempotency record
       const completedRecord: IdempotencyRecord = {
         ...pendingRecord,
         status: "COMPLETED",
@@ -272,7 +319,7 @@ export class CheckoutService {
       };
       transaction.set(idempotencyRef, IdempotencyRecordMapper.toPersistence(completedRecord));
 
-      // 8. Delete Cart
+      // Delete Cart
       transaction.delete(cartRef);
 
       return order;

@@ -2,13 +2,7 @@
 
 import React, { use, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import {
-  Calendar,
-  MapPin,
-  AlertCircle,
-  ArrowLeft,
-  XCircle,
-} from "lucide-react";
+import { Calendar, MapPin, AlertCircle, ArrowLeft, XCircle } from "lucide-react";
 import { Container } from "@/components/layout/layout-primitives";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -21,7 +15,6 @@ import Image from "next/image";
 export default function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: orderId } = use(params);
   const { toast } = useToast();
-
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
