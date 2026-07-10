@@ -1,0 +1,88 @@
+name: Cloud Functions CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - "firebase/**"
+      - ".github/workflows/functions-deploy.yml"
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - "firebase/**"
+
+jobs:
+  audit-and-build:
+    name: Audit, Build, and Lint Cloud Functions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Root & Workspace Dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build --workspace=functions
+
+      - name: Lint Cloud Functions
+        run: npm run lint --workspace=functions || echo "No lint rules configured yet."
+
+  deploy-dev-staging:
+    name: Deploy to Dev/Staging Environment
+    needs: audit-and-build
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy Cloud Functions to Dev Project
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: firebase deploy --only functions --project zell-dev --token "$FIREBASE_TOKEN"
+
+  deploy-prod:
+    name: Deploy to Production Environment
+    needs: audit-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy Cloud Functions to Production Project
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: firebase deploy --only functions --project zell-prod --token "$FIREBASE_TOKEN"

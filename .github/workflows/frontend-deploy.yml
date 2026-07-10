@@ -1,0 +1,64 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "web/**"
+      - ".github/workflows/frontend-deploy.yml"
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "web/**"
+
+jobs:
+  audit-and-build:
+    name: Audit, Lint, and Build Storefront
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Root & Workspace Dependencies
+        run: npm ci
+
+      - name: Lint Code
+        run: npm run lint --workspace=web
+
+      - name: Type Check Storefront
+        run: npm run build --workspace=web -- --no-minify # Next.js build typechecks code
+
+  deploy-preview:
+    name: Deploy Staging/Preview
+    needs: audit-and-build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      # Placeholder for actual Vercel/Firebase CLI deployment script using target secrets
+      - name: Deploy Preview Endpoint
+        run: echo "Deploying dynamic storefront preview endpoint on Vercel/Firebase..."
+
+  deploy-prod:
+    name: Deploy Production
+    needs: audit-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      # Placeholder for production Vercel/Firebase CLI deployment using target secrets
+      - name: Deploy Production Storefront
+        run: echo "Deploying live production storefront on Vercel/Firebase..."

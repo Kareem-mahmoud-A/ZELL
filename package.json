@@ -1,0 +1,30 @@
+{
+  "name": "zell-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "web",
+    "functions"
+  ],
+  "scripts": {
+    "web:dev": "npm run dev --workspace=web",
+    "web:build": "npm run build --workspace=web",
+    "web:start": "npm run start --workspace=web",
+    "functions:build": "npm run build --workspace=functions",
+    "functions:serve": "npm run serve --workspace=functions",
+    "functions:shell": "npm run shell --workspace=functions",
+    "functions:deploy": "npm run deploy --workspace=functions",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "ts-deepmerge": "^8.0.1",
+    "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.5"
+  }
+}

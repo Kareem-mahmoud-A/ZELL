@@ -1,0 +1,30 @@
+{
+  "name": "zell-functions",
+  "version": "1.0.0",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^6.0.0",
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.63.0"
+  },
+  "engines": {
+    "node": "20"
+  }
+}
