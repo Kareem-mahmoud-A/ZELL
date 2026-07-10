@@ -65,12 +65,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label="Toggle dark mode"
-            >
+            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode">
               {mounted && theme === "dark" ? (
                 <Sun className="h-5 w-5 transition-transform" />
               ) : (

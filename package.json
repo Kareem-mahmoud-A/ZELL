@@ -16,6 +16,7 @@
     "functions:deploy": "npm run deploy --workspace=functions",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "build": "npm run web:build && npm run functions:build",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces"
   },

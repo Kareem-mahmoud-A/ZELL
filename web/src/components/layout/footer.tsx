@@ -44,9 +44,7 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="text-sm font-semibold mb-4 uppercase tracking-wider">
-            Customer Service
-          </h4>
+          <h4 className="text-sm font-semibold mb-4 uppercase tracking-wider">Customer Service</h4>
           <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
             <li>
               <a href="#" className="hover:text-foreground transition-colors">
