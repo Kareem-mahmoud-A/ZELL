@@ -15,7 +15,7 @@ export class Money {
   public toString(): string {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: this.currency
+      currency: this.currency,
     }).format(this.amount);
   }
 

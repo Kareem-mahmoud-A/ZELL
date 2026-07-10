@@ -7,7 +7,7 @@ import {
   ShipmentStatus,
   PromotionType,
   DiscountScope,
-  NotificationType
+  NotificationType,
 } from "../enums";
 
 // User Schemas
@@ -21,13 +21,13 @@ export const UserSchema = z.object({
   lastName: z.string().min(1),
   phone: z.string().optional(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 export const CreateUserDtoSchema = UserSchema.omit({
   id: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
 });
 
 export const UpdateUserDtoSchema = CreateUserDtoSchema.partial();
@@ -42,12 +42,12 @@ export const AddressSchema = z.object({
   postalCode: z.string().min(1),
   country: z.string().min(1),
   isDefault: z.boolean(),
-  label: z.string().optional()
+  label: z.string().optional(),
 });
 
 export const CreateAddressDtoSchema = AddressSchema.omit({
   id: true,
-  userId: true
+  userId: true,
 });
 
 // ProductVariant Schema
@@ -56,7 +56,7 @@ export const ProductVariantSchema = z.object({
   price: z.number().int().nonnegative(),
   attributes: z.record(z.string(), z.string()),
   stockQuantity: z.number().int().nonnegative(),
-  imageGallery: z.array(z.string())
+  imageGallery: z.array(z.string()),
 });
 
 // Product Schema
@@ -73,7 +73,7 @@ export const ProductSchema = z.object({
   reviewCount: z.number().int().nonnegative(),
   isActive: z.boolean(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 export const CreateProductDtoSchema = ProductSchema.omit({
@@ -81,7 +81,7 @@ export const CreateProductDtoSchema = ProductSchema.omit({
   rating: true,
   reviewCount: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
 });
 
 // Category Schema
@@ -93,7 +93,7 @@ export const CategorySchema = z.object({
   parentId: z.string().optional(),
   image: z.string().optional(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Cart Schemas
@@ -103,7 +103,7 @@ export const CartItemSchema = z.object({
   quantity: z.number().int().positive(),
   price: z.number().int().nonnegative(),
   title: z.string().min(1),
-  attributes: z.record(z.string(), z.string()).optional()
+  attributes: z.record(z.string(), z.string()).optional(),
 });
 
 export const CartSchema = z.object({
@@ -116,7 +116,7 @@ export const CartSchema = z.object({
   total: z.number().int().nonnegative(),
   promoCodesApplied: z.array(z.string()),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Order Schemas
@@ -126,7 +126,7 @@ export const OrderItemSchema = z.object({
   quantity: z.number().int().positive(),
   price: z.number().int().nonnegative(),
   title: z.string().min(1),
-  attributes: z.record(z.string(), z.string())
+  attributes: z.record(z.string(), z.string()),
 });
 
 export const OrderSchema = z.object({
@@ -144,7 +144,7 @@ export const OrderSchema = z.object({
   paymentStatus: z.nativeEnum(PaymentStatus),
   shipmentStatus: z.nativeEnum(ShipmentStatus),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Review Schema
@@ -159,7 +159,7 @@ export const ReviewSchema = z.object({
   isVerifiedPurchase: z.boolean(),
   helpfulCount: z.number().int().nonnegative(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Promotion Schema
@@ -177,7 +177,7 @@ export const PromotionSchema = z.object({
   minPurchaseAmount: z.number().int().nonnegative().optional(),
   isActive: z.boolean(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Coupon Schema
@@ -189,7 +189,7 @@ export const CouponSchema = z.object({
   usedCount: z.number().int().nonnegative(),
   isActive: z.boolean(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Inventory Schema
@@ -199,7 +199,7 @@ export const InventorySchema = z.object({
   quantity: z.number().int().nonnegative(),
   reservedQuantity: z.number().int().nonnegative(),
   reorderPoint: z.number().int().nonnegative(),
-  lastUpdated: z.date()
+  lastUpdated: z.date(),
 });
 
 // Payment Schema
@@ -214,14 +214,14 @@ export const PaymentSchema = z.object({
   transactionId: z.string().min(1),
   receiptUrl: z.string().optional(),
   errorDetails: z.string().optional(),
-  createdAt: z.date()
+  createdAt: z.date(),
 });
 
 // Shipment Schema
 export const ShipmentStatusHistorySchema = z.object({
   status: z.nativeEnum(ShipmentStatus),
   updatedAt: z.date(),
-  details: z.string().optional()
+  details: z.string().optional(),
 });
 
 export const ShipmentSchema = z.object({
@@ -234,7 +234,7 @@ export const ShipmentSchema = z.object({
   shippedAt: z.date().optional(),
   deliveredAt: z.date().optional(),
   statusHistory: z.array(ShipmentStatusHistorySchema),
-  createdAt: z.date()
+  createdAt: z.date(),
 });
 
 // Notification Schema
@@ -246,7 +246,7 @@ export const NotificationSchema = z.object({
   isRead: z.boolean(),
   type: z.nativeEnum(NotificationType),
   actionUrl: z.string().optional(),
-  createdAt: z.date()
+  createdAt: z.date(),
 });
 
 // DTO Inferred Types

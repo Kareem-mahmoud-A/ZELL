@@ -2,7 +2,7 @@ export enum Role {
   ADMIN = "ADMIN",
   MERCHANT = "MERCHANT",
   CUSTOMER = "CUSTOMER",
-  GUEST = "GUEST"
+  GUEST = "GUEST",
 }
 
 export enum OrderStatus {
@@ -12,45 +12,45 @@ export enum OrderStatus {
   SHIPPED = "SHIPPED",
   DELIVERED = "DELIVERED",
   CANCELLED = "CANCELLED",
-  REFUNDED = "REFUNDED"
+  REFUNDED = "REFUNDED",
 }
 
 export enum PaymentStatus {
   PENDING = "PENDING",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
-  REFUNDED = "REFUNDED"
+  REFUNDED = "REFUNDED",
 }
 
 export enum PaymentMethod {
   CARD = "CARD",
   PAYPAL = "PAYPAL",
   APPLE_PAY = "APPLE_PAY",
-  GOOGLE_PAY = "GOOGLE_PAY"
+  GOOGLE_PAY = "GOOGLE_PAY",
 }
 
 export enum ShipmentStatus {
   PENDING = "PENDING",
   IN_TRANSIT = "IN_TRANSIT",
   DELIVERED = "DELIVERED",
-  RETURNED = "RETURNED"
+  RETURNED = "RETURNED",
 }
 
 export enum PromotionType {
   PERCENTAGE = "PERCENTAGE",
   FIXED_AMOUNT = "FIXED_AMOUNT",
-  FREE_SHIPPING = "FREE_SHIPPING"
+  FREE_SHIPPING = "FREE_SHIPPING",
 }
 
 export enum DiscountScope {
   PRODUCT = "PRODUCT",
   CATEGORY = "CATEGORY",
-  ORDER_SUBTOTAL = "ORDER_SUBTOTAL"
+  ORDER_SUBTOTAL = "ORDER_SUBTOTAL",
 }
 
 export enum NotificationType {
   ORDER_STATUS = "ORDER_STATUS",
   PROMOTION = "PROMOTION",
   INVENTORY_ALERT = "INVENTORY_ALERT",
-  SECURITY = "SECURITY"
+  SECURITY = "SECURITY",
 }

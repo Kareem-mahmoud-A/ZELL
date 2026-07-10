@@ -37,7 +37,10 @@ export class OrderService {
 
         // Decrement stock in array map
         variants[variantIndex].stockQuantity -= item.quantity;
-        transaction.update(productRef, { variants, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+        transaction.update(productRef, {
+          variants,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
       }
 
       // 2. Create the order document
@@ -47,7 +50,7 @@ export class OrderService {
         id: orderId,
         userId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     });
   }

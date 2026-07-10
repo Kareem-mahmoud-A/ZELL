@@ -8,7 +8,7 @@ import {
   Wishlist,
   Review,
   Promotion,
-  Notification
+  Notification,
 } from "@zell/shared";
 import { UserMapper, ProductMapper, OrderMapper } from "@zell/shared";
 

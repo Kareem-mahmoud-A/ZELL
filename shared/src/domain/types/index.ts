@@ -6,7 +6,7 @@ import {
   ShipmentStatus,
   PromotionType,
   DiscountScope,
-  NotificationType
+  NotificationType,
 } from "../enums";
 
 export interface User {

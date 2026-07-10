@@ -23,7 +23,7 @@ export class UserMapper {
       lastName: raw.lastName,
       phone: raw.phone,
       createdAt: DateMapper.toDate(raw.createdAt),
-      updatedAt: DateMapper.toDate(raw.updatedAt)
+      updatedAt: DateMapper.toDate(raw.updatedAt),
     };
   }
 
@@ -36,7 +36,7 @@ export class UserMapper {
       lastName: domain.lastName,
       phone: domain.phone,
       createdAt: domain.createdAt,
-      updatedAt: domain.updatedAt
+      updatedAt: domain.updatedAt,
     };
   }
 }
@@ -55,14 +55,14 @@ export class ProductMapper {
         price: v.price,
         attributes: v.attributes || {},
         stockQuantity: v.stockQuantity,
-        imageGallery: v.imageGallery || []
+        imageGallery: v.imageGallery || [],
       })),
       categories: raw.categories || [],
       rating: raw.rating,
       reviewCount: raw.reviewCount || 0,
       isActive: raw.isActive !== undefined ? raw.isActive : true,
       createdAt: DateMapper.toDate(raw.createdAt),
-      updatedAt: DateMapper.toDate(raw.updatedAt)
+      updatedAt: DateMapper.toDate(raw.updatedAt),
     };
   }
 
@@ -79,14 +79,14 @@ export class ProductMapper {
         price: v.price,
         attributes: v.attributes,
         stockQuantity: v.stockQuantity,
-        imageGallery: v.imageGallery
+        imageGallery: v.imageGallery,
       })),
       categories: domain.categories,
       rating: domain.rating,
       reviewCount: domain.reviewCount,
       isActive: domain.isActive,
       createdAt: domain.createdAt,
-      updatedAt: domain.updatedAt
+      updatedAt: domain.updatedAt,
     };
   }
 }
@@ -102,7 +102,7 @@ export class OrderMapper {
         quantity: i.quantity,
         price: i.price,
         title: i.title,
-        attributes: i.attributes || {}
+        attributes: i.attributes || {},
       })),
       status: raw.status,
       subtotal: raw.subtotal,
@@ -115,7 +115,7 @@ export class OrderMapper {
       paymentStatus: raw.paymentStatus,
       shipmentStatus: raw.shipmentStatus,
       createdAt: DateMapper.toDate(raw.createdAt),
-      updatedAt: DateMapper.toDate(raw.updatedAt)
+      updatedAt: DateMapper.toDate(raw.updatedAt),
     };
   }
 
@@ -129,7 +129,7 @@ export class OrderMapper {
         quantity: i.quantity,
         price: i.price,
         title: i.title,
-        attributes: i.attributes
+        attributes: i.attributes,
       })),
       status: domain.status,
       subtotal: domain.subtotal,
@@ -142,7 +142,7 @@ export class OrderMapper {
       paymentStatus: domain.paymentStatus,
       shipmentStatus: domain.shipmentStatus,
       createdAt: domain.createdAt,
-      updatedAt: domain.updatedAt
+      updatedAt: domain.updatedAt,
     };
   }
 }

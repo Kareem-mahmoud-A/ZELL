@@ -9,7 +9,7 @@ export const defaultFeatureFlags: FeatureFlags = {
   enableGuestCheckout: true,
   enablePromoStacking: false,
   enableReviewsVerification: true,
-  enableMobilePayments: false
+  enableMobilePayments: false,
 };
 
 export class FeatureFlagManager {
