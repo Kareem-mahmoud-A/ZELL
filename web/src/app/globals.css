@@ -1,26 +1,158 @@
 @import "tailwindcss";
 
+/* Configure class-based dark mode for Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand Colors */
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c084fc;
+  --color-primary-400: #a855f7;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #7c3aed;
+  --color-primary-700: #6d28d9;
+  --color-primary-800: #5b21b6;
+  --color-primary-900: #4c1d95;
+  --color-primary-950: #2e1065;
+
+  --color-accent-50: #fff1f2;
+  --color-accent-100: #ffe4e6;
+  --color-accent-200: #fecdd3;
+  --color-accent-300: #fb7185;
+  --color-accent-400: #f43f5e;
+  --color-accent-500: #e11d48;
+  --color-accent-600: #be123c;
+  --color-accent-700: #9f1239;
+  --color-accent-800: #881337;
+  --color-accent-900: #4c0519;
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Ease Curves */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  /* Animation Durations */
+  --animate-accordion-down: accordion-down 0.2s cubic-bezier(0.87, 0, 0.13, 1);
+  --animate-accordion-up: accordion-up 0.2s cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
 :root {
+  /* Light Theme Mappings */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #09090b;
+
+  --card: #ffffff;
+  --card-foreground: #09090b;
+
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
+}
+
+.dark {
+  /* Dark Theme Mappings */
+  --background: #09090b;
+  --foreground: #fafafa;
+
+  --card: #09090b;
+  --card-foreground: #fafafa;
+
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
+
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Global Reset & Spacing Base */
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
