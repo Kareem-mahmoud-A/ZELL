@@ -4,7 +4,9 @@
   "private": true,
   "workspaces": [
     "web",
-    "functions"
+    "functions",
+    "shared",
+    "database"
   ],
   "scripts": {
     "web:dev": "npm run dev --workspace=web",
@@ -14,9 +16,11 @@
     "functions:serve": "npm run serve --workspace=functions",
     "functions:shell": "npm run shell --workspace=functions",
     "functions:deploy": "npm run deploy --workspace=functions",
+    "shared:build": "npm run build --workspace=shared",
+    "database:build": "npm run build --workspace=database",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build": "npm run web:build && npm run functions:build",
+    "build": "npm run shared:build && npm run database:build && npm run web:build && npm run functions:build",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces"
   },

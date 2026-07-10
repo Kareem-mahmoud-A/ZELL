@@ -1,0 +1,18 @@
+{
+  "name": "@zell/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@zell/shared": "*",
+    "firebase-admin": "^13.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
