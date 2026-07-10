@@ -242,7 +242,7 @@ export const InventorySchema = z.object({
   reorderPoint: z.number().int().nonnegative(),
   lowStockThreshold: z.number().int().nonnegative(),
   status: z.nativeEnum(InventoryStatus),
-  movements: z.array(StockMovementSchema),
+  // movements stored in subcollection inventory/{sku}/movements
   lastUpdated: z.date(),
 });
 

@@ -1,64 +1,130 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper checks
+
+    // ─── Auth Helpers ─────────────────────────────────────────────────────────
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
+
     function hasRole(role) {
       return isAuthenticated() && request.auth.token.role == role;
     }
-    
+
     function isAdmin() {
       return hasRole('ADMIN');
     }
 
-    // Rules for Users
+    function isMerchant() {
+      return hasRole('MERCHANT');
+    }
+
+    function isManager() {
+      return hasRole('MANAGER');
+    }
+
+    function isSupport() {
+      return hasRole('SUPPORT');
+    }
+
+    // Matches roles that can manage products and catalog
+    function canManageProducts() {
+      return isAdmin() || isMerchant() || isManager();
+    }
+
+    // Matches roles that can manage inventory levels and stock movements
+    function canManageInventory() {
+      return isAdmin() || isMerchant() || isManager();
+    }
+
+    // Matches roles that can manage orders (admin, manager, support)
+    function canManageOrders() {
+      return isAdmin() || isManager() || isSupport();
+    }
+
+    // ─── Users ────────────────────────────────────────────────────────────────
+
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
     }
 
-    // Rules for Products
+    // ─── Products ─────────────────────────────────────────────────────────────
+
     match /products/{productId} {
-      allow read: if resource == null || resource.data.isActive == true || isAdmin();
-      allow write: if isAdmin();
+      // Public can read active products; admins can read all
+      allow read: if resource == null
+        || resource.data.isActive == true
+        || resource.data.visibility == 'VISIBLE'
+        || canManageProducts();
+      // Write requires catalog management permission
+      allow write: if canManageProducts();
     }
 
-    // Rules for Categories
+    // ─── Categories ───────────────────────────────────────────────────────────
+
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if canManageProducts();
     }
 
-    // Rules for Carts
+    // ─── Brands ───────────────────────────────────────────────────────────────
+
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if canManageProducts();
+    }
+
+    // ─── Inventory ────────────────────────────────────────────────────────────
+
+    match /inventory/{sku} {
+      // Only staff with inventory permission can read/write stock levels
+      allow read: if canManageInventory();
+      allow write: if canManageInventory();
+
+      // StockMovements subcollection — read/write same as parent
+      match /movements/{movementId} {
+        allow read: if canManageInventory();
+        // Movements are written via Admin SDK in server actions only — deny direct client writes
+        allow write: if false;
+      }
+    }
+
+    // ─── Carts ────────────────────────────────────────────────────────────────
+
     match /carts/{cartId} {
-      // Allow read and write if owned by user, or if it is a guest cart (userId is null/not set)
-      allow read: if isOwner(cartId) 
-        || (resource != null && (resource.data.userId == request.auth.uid || resource.data.userId == null));
-      allow create, update: if isOwner(cartId) 
-        || (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null);
-      allow delete: if isOwner(cartId) 
-        || (resource != null && (resource.data.userId == request.auth.uid || resource.data.userId == null));
+      allow read: if isOwner(cartId)
+        || (resource != null
+          && (resource.data.userId == request.auth.uid
+            || resource.data.userId == null));
+      allow create, update: if isOwner(cartId)
+        || (request.resource.data.userId == request.auth.uid
+          || request.resource.data.userId == null);
+      allow delete: if isOwner(cartId)
+        || (resource != null
+          && (resource.data.userId == request.auth.uid
+            || resource.data.userId == null));
     }
 
-    // Rules for Orders
+    // ─── Orders ───────────────────────────────────────────────────────────────
+
     match /orders/{orderId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      // Orders are created strictly through the Serverless Cloud Function checkout boundary
+      allow read: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || canManageOrders());
+      // Orders are created exclusively via the server-side checkout Cloud Function
       allow create: if false;
-      allow update, delete: if isAdmin();
+      allow update, delete: if canManageOrders();
     }
 
-    // Rules for Reviews
+    // ─── Reviews ─────────────────────────────────────────────────────────────
+
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if isAuthenticated() 
+      allow create: if isAuthenticated()
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }

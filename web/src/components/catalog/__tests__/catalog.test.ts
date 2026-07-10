@@ -47,13 +47,17 @@ describe("E-commerce Pricing Calculations", () => {
   it("should calculate correct active pricing with overrides", () => {
     const productBasePrice = 10000;
     const variantOverridePrice = 12000;
-    const variantNoOverridePrice = 0;
+    const variantFreePrice = 0;
+    const variantNoOverridePrice = undefined;
 
-    const price1 = variantOverridePrice > 0 ? variantOverridePrice : productBasePrice;
-    const price2 = variantNoOverridePrice > 0 ? variantNoOverridePrice : productBasePrice;
+    // Fix 5 nullish coalescing check
+    const price1 = variantOverridePrice ?? productBasePrice;
+    const price2 = variantFreePrice ?? productBasePrice;
+    const price3 = variantNoOverridePrice ?? productBasePrice;
 
     expect(price1).toBe(12000);
-    expect(price2).toBe(10000);
+    expect(price2).toBe(0); // Free product variant pricing
+    expect(price3).toBe(10000);
   });
 });
 
@@ -97,5 +101,17 @@ describe("RBAC Catalog & Inventory Authorizations", () => {
     expect(SecurityPolicy.hasPermission(Role.CUSTOMER, Permission.VIEW_CATALOG)).toBe(true);
     expect(SecurityPolicy.hasPermission(Role.GUEST, Permission.VIEW_CATALOG)).toBe(true);
     expect(SecurityPolicy.hasPermission(Role.SUPPORT, Permission.VIEW_CATALOG)).toBe(true);
+  });
+
+  it("should enforce MANAGE_INVENTORY permission and helpers correctly", () => {
+    expect(SecurityPolicy.hasPermission(Role.ADMIN, Permission.MANAGE_INVENTORY)).toBe(true);
+    expect(SecurityPolicy.hasPermission(Role.MERCHANT, Permission.MANAGE_INVENTORY)).toBe(true);
+    expect(SecurityPolicy.hasPermission(Role.MANAGER, Permission.MANAGE_INVENTORY)).toBe(true);
+    expect(SecurityPolicy.hasPermission(Role.SUPPORT, Permission.MANAGE_INVENTORY)).toBe(false);
+    expect(SecurityPolicy.hasPermission(Role.CUSTOMER, Permission.MANAGE_INVENTORY)).toBe(false);
+
+    expect(SecurityPolicy.canManageInventory(Role.ADMIN)).toBe(true);
+    expect(SecurityPolicy.canManageInventory(Role.MANAGER)).toBe(true);
+    expect(SecurityPolicy.canManageInventory(Role.CUSTOMER)).toBe(false);
   });
 });

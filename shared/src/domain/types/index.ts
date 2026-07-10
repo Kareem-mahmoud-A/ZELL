@@ -220,7 +220,7 @@ export interface Inventory {
   reorderPoint: number;
   lowStockThreshold: number;
   status: InventoryStatus;
-  movements: StockMovement[];
+  // movements are stored in subcollection: inventory/{sku}/movements/{id}
   lastUpdated: Date;
 }
 

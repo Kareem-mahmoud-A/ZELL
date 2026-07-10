@@ -1,7 +1,15 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { Role, Product, Category } from "@zell/shared";
+import {
+  Role,
+  Permission,
+  SecurityPolicy,
+  Product,
+  Category,
+  UnauthorizedError,
+  ForbiddenError,
+} from "@zell/shared";
 import { CatalogService, InventoryService } from "@zell/database";
 
 interface JwtPayload {
@@ -10,7 +18,7 @@ interface JwtPayload {
   [key: string]: unknown;
 }
 
-// Decode session JWT safely on server side
+// Decode session JWT payload — the token itself was verified at /api/auth/session creation time
 function decodeJwt(token: string): JwtPayload | null {
   try {
     const parts = token.split(".");
@@ -22,27 +30,43 @@ function decodeJwt(token: string): JwtPayload | null {
   }
 }
 
-// Verify request context caller has ADMIN, MERCHANT or MANAGER permissions
-async function verifyAdminAuth(): Promise<string> {
+/** Extract and verify the authenticated user from session cookie. */
+async function getAuthenticatedUser(): Promise<{ uid: string; role: Role }> {
   const cookieStore = await cookies();
   const session = cookieStore.get("session")?.value;
+
   if (!session) {
-    throw new Error("Unauthenticated request");
+    throw new UnauthorizedError("No active session. Please log in.");
   }
 
   const payload = decodeJwt(session);
-  const userRole = payload?.role;
-
-  if (userRole !== Role.ADMIN && userRole !== Role.MERCHANT && userRole !== Role.MANAGER) {
-    throw new Error("Permission Denied: Insufficient authorization level");
+  if (!payload?.role || !payload?.uid) {
+    throw new UnauthorizedError("Invalid session token.");
   }
 
-  return payload?.uid ?? "admin-operator";
+  // Validate role is a recognised enum value
+  const role = payload.role as Role;
+  if (!Object.values(Role).includes(role)) {
+    throw new ForbiddenError(`Unrecognised role: ${String(payload.role)}`);
+  }
+
+  return { uid: payload.uid as string, role };
 }
+
+/** Require a specific permission — throws ForbiddenError if not satisfied. */
+function requirePermission(role: Role, permission: Permission): void {
+  if (!SecurityPolicy.hasPermission(role, permission)) {
+    throw new ForbiddenError(`Role '${role}' does not have permission '${permission}'.`);
+  }
+}
+
+// ─── Product Actions ────────────────────────────────────────────────────────
 
 export async function saveProductAction(id: string, productData: Partial<Product>) {
   try {
-    await verifyAdminAuth();
+    const { role } = await getAuthenticatedUser();
+    requirePermission(role, Permission.MANAGE_PRODUCTS);
+
     if (id) {
       await CatalogService.updateProduct(id, productData);
       return { success: true, message: "Product updated successfully" };
@@ -58,9 +82,13 @@ export async function saveProductAction(id: string, productData: Partial<Product
   }
 }
 
+// ─── Category Actions ───────────────────────────────────────────────────────
+
 export async function saveCategoryAction(id: string, categoryData: Partial<Category>) {
   try {
-    await verifyAdminAuth();
+    const { role } = await getAuthenticatedUser();
+    requirePermission(role, Permission.MANAGE_PRODUCTS);
+
     if (id) {
       await CatalogService.updateCategory(id, categoryData);
       return { success: true, message: "Category updated successfully" };
@@ -76,10 +104,14 @@ export async function saveCategoryAction(id: string, categoryData: Partial<Categ
   }
 }
 
+// ─── Inventory Actions ──────────────────────────────────────────────────────
+
 export async function adjustStockAction(sku: string, quantityChange: number, reason: string) {
   try {
-    const operatorUid = await verifyAdminAuth();
-    await InventoryService.adjustStock(sku, quantityChange, reason, operatorUid);
+    const { uid, role } = await getAuthenticatedUser();
+    requirePermission(role, Permission.MANAGE_INVENTORY);
+
+    await InventoryService.adjustStock(sku, quantityChange, reason, uid);
     return { success: true, message: "Inventory adjusted successfully" };
   } catch (error: unknown) {
     console.error("Action adjustStock error:", error);

@@ -4,6 +4,7 @@ export enum Permission {
   VIEW_CATALOG = "VIEW_CATALOG",
   CHECKOUT = "CHECKOUT",
   MANAGE_PRODUCTS = "MANAGE_PRODUCTS",
+  MANAGE_INVENTORY = "MANAGE_INVENTORY",
   MANAGE_ORDERS = "MANAGE_ORDERS",
   MANAGE_USERS = "MANAGE_USERS",
   VIEW_REPORTS = "VIEW_REPORTS",
@@ -14,26 +15,40 @@ const rolePermissions: Record<Role, Permission[]> = {
   [Role.MERCHANT]: [
     Permission.VIEW_CATALOG,
     Permission.MANAGE_PRODUCTS,
+    Permission.MANAGE_INVENTORY,
     Permission.MANAGE_ORDERS,
     Permission.VIEW_REPORTS,
   ],
   [Role.MANAGER]: [
     Permission.VIEW_CATALOG,
     Permission.MANAGE_PRODUCTS,
+    Permission.MANAGE_INVENTORY,
     Permission.MANAGE_ORDERS,
     Permission.VIEW_REPORTS,
   ],
+  [Role.SUPPORT]: [Permission.VIEW_CATALOG, Permission.MANAGE_ORDERS],
   [Role.CUSTOMER]: [Permission.VIEW_CATALOG, Permission.CHECKOUT],
   [Role.GUEST]: [Permission.VIEW_CATALOG],
-  [Role.SUPPORT]: [Permission.VIEW_CATALOG, Permission.MANAGE_ORDERS],
 };
 
 export class SecurityPolicy {
   public static hasPermission(role: Role, permission: Permission): boolean {
-    return rolePermissions[role]?.includes(permission) || false;
+    return rolePermissions[role]?.includes(permission) ?? false;
   }
 
   public static isAuthorized(userRole: Role, requiredRoles: Role[]): boolean {
     return requiredRoles.includes(userRole);
+  }
+
+  public static canManageProducts(role: Role): boolean {
+    return this.hasPermission(role, Permission.MANAGE_PRODUCTS);
+  }
+
+  public static canManageInventory(role: Role): boolean {
+    return this.hasPermission(role, Permission.MANAGE_INVENTORY);
+  }
+
+  public static canManageOrders(role: Role): boolean {
+    return this.hasPermission(role, Permission.MANAGE_ORDERS);
   }
 }

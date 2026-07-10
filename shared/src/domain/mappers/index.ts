@@ -1,3 +1,6 @@
+import { Inventory, Product } from "../types";
+import { InventoryStatus } from "../enums";
+
 export interface Mapper<Domain, Persistence> {
   toDomain(raw: Persistence): Domain;
   toPersistence(domain: Domain): Persistence;
@@ -42,45 +45,46 @@ export class UserMapper {
 }
 
 export class ProductMapper {
-  public static toDomain(raw: any): any {
+  public static toDomain(raw: Record<string, unknown>): Product {
+    const variants = (raw.variants as Record<string, unknown>[] | undefined) ?? [];
     return {
-      id: raw.id,
-      title: raw.title,
-      slug: raw.slug,
-      description: raw.description,
-      shortDescription: raw.shortDescription || "",
-      basePrice: raw.basePrice,
-      compareAtPrice: raw.compareAtPrice,
-      discountPrice: raw.discountPrice,
-      currency: raw.currency || "USD",
-      mainImage: raw.mainImage,
-      variants: (raw.variants || []).map((v: any) => ({
-        sku: v.sku,
-        price: v.price,
-        attributes: v.attributes || {},
-        stockQuantity: v.stockQuantity,
-        imageGallery: v.imageGallery || [],
-        isAvailable: v.isAvailable !== undefined ? v.isAvailable : true,
+      id: raw.id as string,
+      title: raw.title as string,
+      slug: raw.slug as string,
+      description: raw.description as string,
+      shortDescription: (raw.shortDescription as string) || "",
+      basePrice: raw.basePrice as number,
+      compareAtPrice: raw.compareAtPrice as number | undefined,
+      discountPrice: raw.discountPrice as number | undefined,
+      currency: (raw.currency as string) || "USD",
+      mainImage: raw.mainImage as string,
+      variants: variants.map((v) => ({
+        sku: v.sku as string,
+        price: v.price as number,
+        attributes: (v.attributes as Record<string, string>) || {},
+        stockQuantity: v.stockQuantity as number,
+        imageGallery: (v.imageGallery as string[]) || [],
+        isAvailable: v.isAvailable !== undefined ? (v.isAvailable as boolean) : true,
       })),
-      categories: raw.categories || [],
-      tags: raw.tags || [],
-      collections: raw.collections || [],
-      visibility: raw.visibility || "VISIBLE",
-      isFeatured: raw.isFeatured !== undefined ? raw.isFeatured : false,
-      brandId: raw.brandId,
+      categories: (raw.categories as string[]) || [],
+      tags: (raw.tags as string[]) || [],
+      collections: (raw.collections as string[]) || [],
+      visibility: (raw.visibility as Product["visibility"]) || "VISIBLE",
+      isFeatured: raw.isFeatured !== undefined ? (raw.isFeatured as boolean) : false,
+      brandId: raw.brandId as string | undefined,
       publishedAt: raw.publishedAt ? DateMapper.toDate(raw.publishedAt) : undefined,
-      rating: raw.rating,
-      reviewCount: raw.reviewCount || 0,
-      isActive: raw.isActive !== undefined ? raw.isActive : true,
-      status: raw.status || "ACTIVE",
-      seoTitle: raw.seoTitle,
-      seoDescription: raw.seoDescription,
+      rating: raw.rating as number | undefined,
+      reviewCount: (raw.reviewCount as number) || 0,
+      isActive: raw.isActive !== undefined ? (raw.isActive as boolean) : true,
+      status: (raw.status as Product["status"]) || "ACTIVE",
+      seoTitle: raw.seoTitle as string | undefined,
+      seoDescription: raw.seoDescription as string | undefined,
       createdAt: DateMapper.toDate(raw.createdAt),
       updatedAt: DateMapper.toDate(raw.updatedAt),
     };
   }
 
-  public static toPersistence(domain: any): any {
+  public static toPersistence(domain: Product): Record<string, unknown> {
     return {
       id: domain.id,
       title: domain.title,
@@ -92,7 +96,7 @@ export class ProductMapper {
       discountPrice: domain.discountPrice,
       currency: domain.currency,
       mainImage: domain.mainImage,
-      variants: domain.variants.map((v: any) => ({
+      variants: domain.variants.map((v) => ({
         sku: v.sku,
         price: v.price,
         attributes: v.attributes,
@@ -210,21 +214,21 @@ export class StockMovementMapper {
 }
 
 export class InventoryMapper {
-  public static toDomain(raw: any): any {
+  public static toDomain(raw: Record<string, unknown>): Inventory {
     return {
-      sku: raw.sku,
-      productId: raw.productId,
-      quantity: raw.quantity,
-      reservedQuantity: raw.reservedQuantity,
-      reorderPoint: raw.reorderPoint,
-      lowStockThreshold: raw.lowStockThreshold || 0,
-      status: raw.status || "IN_STOCK",
-      movements: (raw.movements || []).map((m: any) => StockMovementMapper.toDomain(m)),
+      sku: raw.sku as string,
+      productId: raw.productId as string,
+      quantity: raw.quantity as number,
+      reservedQuantity: raw.reservedQuantity as number,
+      reorderPoint: raw.reorderPoint as number,
+      lowStockThreshold: (raw.lowStockThreshold as number) || 0,
+      status: (raw.status as InventoryStatus) || InventoryStatus.IN_STOCK,
+      // movements live in subcollection — not included here
       lastUpdated: DateMapper.toDate(raw.lastUpdated),
     };
   }
 
-  public static toPersistence(domain: any): any {
+  public static toPersistence(domain: Inventory): Record<string, unknown> {
     return {
       sku: domain.sku,
       productId: domain.productId,
@@ -233,7 +237,7 @@ export class InventoryMapper {
       reorderPoint: domain.reorderPoint,
       lowStockThreshold: domain.lowStockThreshold,
       status: domain.status,
-      movements: domain.movements.map((m: any) => StockMovementMapper.toPersistence(m)),
+      // movements written separately to subcollection
       lastUpdated: domain.lastUpdated,
     };
   }

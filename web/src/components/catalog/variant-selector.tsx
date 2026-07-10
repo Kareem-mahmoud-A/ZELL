@@ -31,7 +31,7 @@ export function VariantSelector({ product }: { product: Product }) {
     ? selectedVariant.imageGallery
     : [product.mainImage];
 
-  const currentPrice = selectedVariant?.price || product.basePrice;
+  const currentPrice = selectedVariant?.price ?? product.basePrice;
   const compareAtPrice = product.compareAtPrice;
   const isAvailable = selectedVariant?.isAvailable ?? true;
   const stockQuantity = selectedVariant?.stockQuantity ?? 0;
