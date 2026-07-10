@@ -17,6 +17,7 @@ build/
 next-env.d.ts
 .cache/
 turbo/
+storybook-static/
 
 # Testing and Coverage
 coverage/
