@@ -138,18 +138,27 @@ export const StockMovementSchema = z.object({
 });
 
 // Cart Schemas
+export const CartItemProductSnapshotSchema = z.object({
+  title: z.string().min(1),
+  mainImage: z.string(),
+  variantAttributes: z.record(z.string(), z.string()),
+  priceAtAdd: z.number().int().nonnegative(),
+  currency: z.string().min(3).max(3),
+  brandName: z.string().optional(),
+});
+
 export const CartItemSchema = z.object({
   productId: z.string().min(1),
   sku: z.string().min(1),
   quantity: z.number().int().positive(),
   price: z.number().int().nonnegative(),
-  title: z.string().min(1),
-  attributes: z.record(z.string(), z.string()).optional(),
+  productSnapshot: CartItemProductSnapshotSchema,
 });
 
 export const CartSchema = z.object({
   id: z.string().min(1),
   userId: z.string().optional(),
+  guestTokenHash: z.string().optional(),
   items: z.array(CartItemSchema),
   subtotal: z.number().int().nonnegative(),
   tax: z.number().int().nonnegative(),
@@ -158,6 +167,32 @@ export const CartSchema = z.object({
   promoCodesApplied: z.array(z.string()),
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+// Wishlist Schemas
+export const WishlistItemSchema = z.object({
+  productId: z.string().min(1),
+  sku: z.string().min(1),
+  addedAt: z.date(),
+  attributes: z.record(z.string(), z.string()).optional(),
+});
+
+export const WishlistSchema = z.object({
+  id: z.string().min(1),
+  userId: z.string().min(1),
+  items: z.array(WishlistItemSchema),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// Inventory Reservation Schema
+export const InventoryReservationSchema = z.object({
+  id: z.string().min(1),
+  sku: z.string().min(1),
+  quantity: z.number().int().positive(),
+  expiresAt: z.date(),
+  status: z.enum(["PENDING", "COMPLETED", "EXPIRED"]),
+  createdAt: z.date(),
 });
 
 // Order Schemas

@@ -32,6 +32,10 @@ export class Money {
     }
     return new Money(this.amountInCents - other.amountInCents, this.currency);
   }
+
+  public multiply(factor: number): Money {
+    return new Money(Math.round(this.amountInCents * factor), this.currency);
+  }
 }
 
 export class Sku {

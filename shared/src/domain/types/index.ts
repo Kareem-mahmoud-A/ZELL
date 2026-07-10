@@ -108,18 +108,27 @@ export interface StockMovement {
   timestamp: Date;
 }
 
+export interface CartItemProductSnapshot {
+  title: string;
+  mainImage: string;
+  variantAttributes: Record<string, string>;
+  priceAtAdd: number; // in cents
+  currency: string;
+  brandName?: string;
+}
+
 export interface CartItem {
   productId: string;
   sku: string;
   quantity: number;
-  price: number; // in cents
-  title: string;
-  attributes?: Record<string, string>;
+  price: number; // unit price at add time (in cents)
+  productSnapshot: CartItemProductSnapshot;
 }
 
 export interface Cart {
   id: string;
   userId?: string; // Optional for Guest/Anonymous Carts
+  guestTokenHash?: string; // HMAC-SHA256 hashed guest token
   items: CartItem[];
   subtotal: number; // in cents
   tax: number; // in cents
@@ -132,7 +141,9 @@ export interface Cart {
 
 export interface WishlistItem {
   productId: string;
+  sku: string;
   addedAt: Date;
+  attributes?: Record<string, string>;
 }
 
 export interface Wishlist {
@@ -141,6 +152,15 @@ export interface Wishlist {
   items: WishlistItem[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface InventoryReservation {
+  id: string;
+  sku: string;
+  quantity: number;
+  expiresAt: Date;
+  status: "PENDING" | "COMPLETED" | "EXPIRED";
+  createdAt: Date;
 }
 
 export interface OrderItem {

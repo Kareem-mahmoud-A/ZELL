@@ -6,8 +6,9 @@ import {
   InventoryStatus,
   StockMovementType,
   NotFoundError,
+  InventoryReservation,
 } from "@zell/shared";
-import { InventoryMapper, StockMovementMapper } from "@zell/shared";
+import { InventoryMapper, StockMovementMapper, InventoryReservationMapper } from "@zell/shared";
 
 export class InventoryService {
   /**
@@ -197,5 +198,153 @@ export class InventoryService {
     return snapshot.docs.map((doc) =>
       StockMovementMapper.toDomain({ id: doc.id, ...doc.data() } as Record<string, unknown>)
     );
+  }
+
+  /**
+   * Reserves stock with an expiration timeout.
+   * Creates an InventoryReservation document at `/reservations/{id}`.
+   */
+  public static async reserveStockWithTimeout(
+    sku: string,
+    quantity: number,
+    ttlSeconds: number
+  ): Promise<string> {
+    const db = getDb();
+    const inventoryRef = db.collection("inventory").doc(sku);
+    const reservationRef = db.collection("reservations").doc();
+
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(inventoryRef);
+      if (!doc.exists) {
+        throw new NotFoundError(`Inventory not found for SKU: ${sku}`);
+      }
+
+      const inventory = InventoryMapper.toDomain({ sku: doc.id, ...doc.data() } as Record<
+        string,
+        unknown
+      >);
+      const available = inventory.quantity - inventory.reservedQuantity;
+
+      if (available < quantity) {
+        throw new Error(
+          `Insufficient stock to reserve SKU ${sku}. Available: ${available}, Requested: ${quantity}`
+        );
+      }
+
+      // Create reservation
+      const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+      const reservation: InventoryReservation = {
+        id: reservationRef.id,
+        sku,
+        quantity,
+        expiresAt,
+        status: "PENDING",
+        createdAt: new Date(),
+      };
+
+      // Update inventory reserved quantity
+      const newReserved = inventory.reservedQuantity + quantity;
+      const newAvailable = inventory.quantity - newReserved;
+
+      let newStatus = InventoryStatus.IN_STOCK;
+      if (newAvailable <= 0) {
+        newStatus = InventoryStatus.OUT_OF_STOCK;
+      } else if (newAvailable <= inventory.lowStockThreshold) {
+        newStatus = InventoryStatus.LOW_STOCK;
+      }
+
+      const updatedInventory: Inventory = {
+        ...inventory,
+        reservedQuantity: newReserved,
+        status: newStatus,
+        lastUpdated: new Date(),
+      };
+
+      transaction.set(inventoryRef, InventoryMapper.toPersistence(updatedInventory));
+      transaction.set(reservationRef, InventoryReservationMapper.toPersistence(reservation));
+    });
+
+    return reservationRef.id;
+  }
+
+  /**
+   * Background task: scans and releases all expired stock reservations.
+   */
+  public static async releaseExpiredReservations(): Promise<number> {
+    const db = getDb();
+    const now = new Date();
+
+    // Query pending reservations that are past expiresAt
+    const snapshot = await db
+      .collection("reservations")
+      .where("status", "==", "PENDING")
+      .where("expiresAt", "<=", now)
+      .get();
+
+    let releasedCount = 0;
+
+    for (const resDoc of snapshot.docs) {
+      const reservation = InventoryReservationMapper.toDomain({
+        id: resDoc.id,
+        ...resDoc.data(),
+      } as Record<string, unknown>);
+
+      try {
+        await db.runTransaction(async (transaction) => {
+          const freshResDoc = await transaction.get(resDoc.ref);
+          if (!freshResDoc.exists) return;
+
+          const freshRes = InventoryReservationMapper.toDomain({
+            id: freshResDoc.id,
+            ...freshResDoc.data(),
+          } as Record<string, unknown>);
+          if (freshRes.status !== "PENDING") return; // Already resolved
+
+          const inventoryRef = db.collection("inventory").doc(freshRes.sku);
+          const inventoryDoc = await transaction.get(inventoryRef);
+
+          if (inventoryDoc.exists) {
+            const inventory = InventoryMapper.toDomain({
+              sku: inventoryDoc.id,
+              ...inventoryDoc.data(),
+            } as Record<string, unknown>);
+
+            // Decrement reserved quantity, capped at 0
+            const newReserved = Math.max(0, inventory.reservedQuantity - freshRes.quantity);
+            const newAvailable = inventory.quantity - newReserved;
+
+            let newStatus = InventoryStatus.IN_STOCK;
+            if (newAvailable <= 0) {
+              newStatus = InventoryStatus.OUT_OF_STOCK;
+            } else if (newAvailable <= inventory.lowStockThreshold) {
+              newStatus = InventoryStatus.LOW_STOCK;
+            }
+
+            const updatedInventory: Inventory = {
+              ...inventory,
+              reservedQuantity: newReserved,
+              status: newStatus,
+              lastUpdated: new Date(),
+            };
+
+            transaction.set(inventoryRef, InventoryMapper.toPersistence(updatedInventory));
+          }
+
+          // Mark reservation expired
+          const updatedReservation: InventoryReservation = {
+            ...freshRes,
+            status: "EXPIRED",
+          };
+
+          transaction.set(resDoc.ref, InventoryReservationMapper.toPersistence(updatedReservation));
+        });
+
+        releasedCount++;
+      } catch (error) {
+        console.error(`Failed to release reservation ${reservation.id}:`, error);
+      }
+    }
+
+    return releasedCount;
   }
 }

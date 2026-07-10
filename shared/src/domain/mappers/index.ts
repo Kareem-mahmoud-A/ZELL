@@ -1,4 +1,12 @@
-import { Inventory, Product } from "../types";
+import {
+  Inventory,
+  Product,
+  Cart,
+  Wishlist,
+  Coupon,
+  Promotion,
+  InventoryReservation,
+} from "../types";
 import { InventoryStatus } from "../enums";
 
 export interface Mapper<Domain, Persistence> {
@@ -295,6 +303,197 @@ export class OrderMapper {
       shipmentStatus: domain.shipmentStatus,
       createdAt: domain.createdAt,
       updatedAt: domain.updatedAt,
+    };
+  }
+}
+
+export class CartMapper {
+  public static toDomain(raw: Record<string, unknown>): Cart {
+    const items = (raw.items as Record<string, unknown>[] | undefined) ?? [];
+    return {
+      id: raw.id as string,
+      userId: raw.userId as string | undefined,
+      guestTokenHash: raw.guestTokenHash as string | undefined,
+      items: items.map((i) => ({
+        productId: i.productId as string,
+        sku: i.sku as string,
+        quantity: i.quantity as number,
+        price: i.price as number,
+        productSnapshot: {
+          title: (i.productSnapshot as Record<string, unknown>)?.title as string,
+          mainImage: (i.productSnapshot as Record<string, unknown>)?.mainImage as string,
+          variantAttributes:
+            ((i.productSnapshot as Record<string, unknown>)?.variantAttributes as Record<
+              string,
+              string
+            >) || {},
+          priceAtAdd: (i.productSnapshot as Record<string, unknown>)?.priceAtAdd as number,
+          currency: ((i.productSnapshot as Record<string, unknown>)?.currency as string) || "USD",
+          brandName: (i.productSnapshot as Record<string, unknown>)?.brandName as
+            string | undefined,
+        },
+      })),
+      subtotal: raw.subtotal as number,
+      tax: raw.tax as number,
+      shipping: raw.shipping as number,
+      total: raw.total as number,
+      promoCodesApplied: (raw.promoCodesApplied as string[]) || [],
+      createdAt: DateMapper.toDate(raw.createdAt),
+      updatedAt: DateMapper.toDate(raw.updatedAt),
+    };
+  }
+
+  public static toPersistence(domain: Cart): Record<string, unknown> {
+    return {
+      id: domain.id,
+      userId: domain.userId,
+      guestTokenHash: domain.guestTokenHash,
+      items: domain.items.map((i) => ({
+        productId: i.productId,
+        sku: i.sku,
+        quantity: i.quantity,
+        price: i.price,
+        productSnapshot: {
+          title: i.productSnapshot.title,
+          mainImage: i.productSnapshot.mainImage,
+          variantAttributes: i.productSnapshot.variantAttributes,
+          priceAtAdd: i.productSnapshot.priceAtAdd,
+          currency: i.productSnapshot.currency,
+          brandName: i.productSnapshot.brandName,
+        },
+      })),
+      subtotal: domain.subtotal,
+      tax: domain.tax,
+      shipping: domain.shipping,
+      total: domain.total,
+      promoCodesApplied: domain.promoCodesApplied,
+      createdAt: domain.createdAt,
+      updatedAt: domain.updatedAt,
+    };
+  }
+}
+
+export class WishlistMapper {
+  public static toDomain(raw: Record<string, unknown>): Wishlist {
+    const items = (raw.items as Record<string, unknown>[] | undefined) ?? [];
+    return {
+      id: raw.id as string,
+      userId: raw.userId as string,
+      items: items.map((i) => ({
+        productId: i.productId as string,
+        sku: i.sku as string,
+        addedAt: DateMapper.toDate(i.addedAt),
+        attributes: (i.attributes as Record<string, string>) || undefined,
+      })),
+      createdAt: DateMapper.toDate(raw.createdAt),
+      updatedAt: DateMapper.toDate(raw.updatedAt),
+    };
+  }
+
+  public static toPersistence(domain: Wishlist): Record<string, unknown> {
+    return {
+      id: domain.id,
+      userId: domain.userId,
+      items: domain.items.map((i) => ({
+        productId: i.productId,
+        sku: i.sku,
+        addedAt: i.addedAt,
+        attributes: i.attributes,
+      })),
+      createdAt: domain.createdAt,
+      updatedAt: domain.updatedAt,
+    };
+  }
+}
+
+export class CouponMapper {
+  public static toDomain(raw: Record<string, unknown>): Coupon {
+    return {
+      id: raw.id as string,
+      promoId: raw.promoId as string,
+      code: raw.code as string,
+      maxUses: raw.maxUses as number,
+      usedCount: raw.usedCount as number,
+      isActive: raw.isActive as boolean,
+      createdAt: DateMapper.toDate(raw.createdAt),
+      updatedAt: DateMapper.toDate(raw.updatedAt),
+    };
+  }
+
+  public static toPersistence(domain: Coupon): Record<string, unknown> {
+    return {
+      id: domain.id,
+      promoId: domain.promoId,
+      code: domain.code,
+      maxUses: domain.maxUses,
+      usedCount: domain.usedCount,
+      isActive: domain.isActive,
+      createdAt: domain.createdAt,
+      updatedAt: domain.updatedAt,
+    };
+  }
+}
+
+export class PromotionMapper {
+  public static toDomain(raw: Record<string, unknown>): Promotion {
+    return {
+      id: raw.id as string,
+      title: raw.title as string,
+      description: raw.description as string | undefined,
+      code: raw.code as string,
+      type: raw.type as any, // Cast to PromotionType
+      value: raw.value as number,
+      scope: raw.scope as any, // Cast to DiscountScope
+      targetIds: (raw.targetIds as string[]) || [],
+      startDate: DateMapper.toDate(raw.startDate),
+      endDate: DateMapper.toDate(raw.endDate),
+      minPurchaseAmount: raw.minPurchaseAmount as number | undefined,
+      isActive: raw.isActive as boolean,
+      createdAt: DateMapper.toDate(raw.createdAt),
+      updatedAt: DateMapper.toDate(raw.updatedAt),
+    };
+  }
+
+  public static toPersistence(domain: Promotion): Record<string, unknown> {
+    return {
+      id: domain.id,
+      title: domain.title,
+      description: domain.description,
+      code: domain.code,
+      type: domain.type,
+      value: domain.value,
+      scope: domain.scope,
+      targetIds: domain.targetIds,
+      startDate: domain.startDate,
+      endDate: domain.endDate,
+      minPurchaseAmount: domain.minPurchaseAmount,
+      isActive: domain.isActive,
+      createdAt: domain.createdAt,
+      updatedAt: domain.updatedAt,
+    };
+  }
+}
+
+export class InventoryReservationMapper {
+  public static toDomain(raw: Record<string, unknown>): InventoryReservation {
+    return {
+      id: raw.id as string,
+      sku: raw.sku as string,
+      quantity: raw.quantity as number,
+      expiresAt: DateMapper.toDate(raw.expiresAt),
+      status: raw.status as InventoryReservation["status"],
+      createdAt: DateMapper.toDate(raw.createdAt),
+    };
+  }
+
+  public static toPersistence(domain: InventoryReservation): Record<string, unknown> {
+    return {
+      id: domain.id,
+      sku: domain.sku,
+      quantity: domain.quantity,
+      expiresAt: domain.expiresAt,
+      status: domain.status,
+      createdAt: domain.createdAt,
     };
   }
 }

@@ -19,6 +19,8 @@ import {
   BrandMapper,
   CategoryMapper,
   InventoryMapper,
+  CartMapper,
+  WishlistMapper,
 } from "@zell/shared";
 
 export class UserRepository extends FirestoreRepository<User> {
@@ -59,13 +61,13 @@ export class InventoryRepository extends FirestoreRepository<Inventory> {
 
 export class CartRepository extends FirestoreRepository<Cart> {
   constructor() {
-    super("carts");
+    super("carts", CartMapper);
   }
 }
 
 export class WishlistRepository extends FirestoreRepository<Wishlist> {
   constructor() {
-    super("wishlists");
+    super("wishlists", WishlistMapper);
   }
 }
 

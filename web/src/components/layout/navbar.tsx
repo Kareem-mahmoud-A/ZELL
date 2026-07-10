@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Menu, ShoppingBag, Heart, User, Sun, Moon } from "lucide-react";
+import { Menu, Heart, User, Sun, Moon } from "lucide-react";
+
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Container } from "./layout-primitives";
 import { SearchBar } from "./search-bar";
 import { Sidebar } from "./sidebar";
+
+import Link from "next/link";
+import { MiniCart } from "@/components/cart/mini-cart";
 
 export function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -37,26 +41,24 @@ export function Navbar() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <a href="#" className="flex items-center gap-2 select-none">
+            <Link href="/" className="flex items-center gap-2 select-none">
               <span className="font-sans font-bold text-xl tracking-widest uppercase">ZELL</span>
-            </a>
+            </Link>
           </div>
 
           <nav className="hidden lg:flex items-center gap-6">
             {[
-              { label: "New Arrivals", href: "#" },
-              { label: "Women", href: "#" },
-              { label: "Men", href: "#" },
-              { label: "Accessories", href: "#" },
-              { label: "Sale", href: "#" },
+              { label: "Products", href: "/products" },
+              { label: "New Arrivals", href: "/products?sort=newest" },
+              { label: "Featured", href: "/products?featured=true" },
             ].map((link, index) => (
-              <a
+              <Link
                 key={index}
                 href={link.href}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -72,18 +74,26 @@ export function Navbar() {
                 <Moon className="h-5 w-5 transition-transform" />
               )}
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Favorites">
-              <Heart className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Shopping Cart">
-              <ShoppingBag className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="User Account">
-              <User className="h-5 w-5" />
-            </Button>
+            <Link href="/wishlist">
+              <Button variant="ghost" size="icon" aria-label="Favorites" className="cursor-pointer">
+                <Heart className="h-5 w-5" />
+              </Button>
+            </Link>
+            <MiniCart />
+            <Link href="/profile">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="User Account"
+                className="cursor-pointer"
+              >
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </Container>
       </header>
+
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
     </>
   );

@@ -97,17 +97,39 @@ service cloud.firestore {
     // ─── Carts ────────────────────────────────────────────────────────────────
 
     match /carts/{cartId} {
+      // Direct client writes are disabled (must use Cart Server Actions / Admin SDK)
       allow read: if isOwner(cartId)
-        || (resource != null
-          && (resource.data.userId == request.auth.uid
-            || resource.data.userId == null));
-      allow create, update: if isOwner(cartId)
-        || (request.resource.data.userId == request.auth.uid
-          || request.resource.data.userId == null);
-      allow delete: if isOwner(cartId)
-        || (resource != null
-          && (resource.data.userId == request.auth.uid
-            || resource.data.userId == null));
+        || (resource != null && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // ─── Wishlists ────────────────────────────────────────────────────────────
+
+    match /wishlists/{wishlistId} {
+      // Direct client writes are disabled (must use Wishlist Server Actions / Admin SDK)
+      allow read: if isOwner(wishlistId);
+      allow write: if false;
+    }
+
+    // ─── Reservations ─────────────────────────────────────────────────────────
+
+    match /reservations/{reservationId} {
+      // Internal system collection — strictly server-controlled
+      allow read, write: if false;
+    }
+
+    // ─── Coupons ──────────────────────────────────────────────────────────────
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if false; // Admin-only updates via Admin SDK
+    }
+
+    // ─── Promotions ───────────────────────────────────────────────────────────
+
+    match /promotions/{promoId} {
+      allow read: if true;
+      allow write: if false; // Admin-only updates via Admin SDK
     }
 
     // ─── Orders ───────────────────────────────────────────────────────────────
@@ -130,3 +152,4 @@ service cloud.firestore {
     }
   }
 }
+
